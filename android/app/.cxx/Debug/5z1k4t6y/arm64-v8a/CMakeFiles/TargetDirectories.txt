@@ -1,0 +1,2 @@
+C:/emlflutter/attendance_project_1/android/app/.cxx/Debug/5z1k4t6y/arm64-v8a/CMakeFiles/edit_cache.dir
+C:/emlflutter/attendance_project_1/android/app/.cxx/Debug/5z1k4t6y/arm64-v8a/CMakeFiles/rebuild_cache.dir
