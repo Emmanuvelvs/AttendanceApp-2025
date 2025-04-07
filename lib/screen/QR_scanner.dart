@@ -46,8 +46,8 @@ late String backendUrl;
     _getid();
 
  backendUrl = widget.type.toLowerCase() == 'in'
-        ? 'http://103.247.19.200:5050/UserReg/inScanQR'
-        : 'http://103.247.19.200:5050/UserReg/outScanQR';
+        ? 'http://185.131.54.8:5050/UserReg/inScanQR'
+        : 'http://185.131.54.8:5050/UserReg/outScanQR';
   }
 
 Future<void>_getid() async{
@@ -131,8 +131,8 @@ final Position? position = await _determinePosition();
       "user_id": userId,
       "action": widget.type,
       "timestamp": DateTime.now().toIso8601String(),
-      "latitude": position.latitude.toString(),
-      "longitude":position.longitude.toString(),
+      "userLatitude": position.latitude.toString(),
+      "userLongitude":position.longitude.toString(),
     };
 
     print('Sending data to backend: ${jsonEncode(data)}');

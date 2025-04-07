@@ -35,8 +35,8 @@ class BreakScannerState extends State<BreakScanner>
 
     // Set the backend URL dynamically for break in or break out
     backendUrl = widget.type.toLowerCase() == 'in'
-        ? 'http://103.247.19.200:5050/UserReg/users/break/scanIn'
-        : 'http://103.247.19.200:5050/UserReg/users/break/scanOut';
+        ? 'http://185.131.54.8:5050/UserReg/users/break/scanIn'
+        : 'http://185.131.54.8:5050/UserReg/users/break/scanOut';
   }
 
   Future<void> _getUserId() async {

@@ -7,7 +7,7 @@ class DeleteUserPage extends StatelessWidget {
   final String userId; // Pass user ID for deletion
 
 Future<void> deleteUserAccount() async {
-    final url = Uri.parse('http://103.247.19.200:5050/UserReg/delete/$userId');
+    final url = Uri.parse('http://185.131.54.8:5050/UserReg/delete/$userId');
 
         try {
       final response = await http.delete(url);

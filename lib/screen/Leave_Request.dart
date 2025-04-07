@@ -9,32 +9,36 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart'; // For JSON encoding/decoding
 import 'package:attendance_project_1/screen/Leave_Request.dart';
 
-
-
 class LeaveRequest extends StatefulWidget {
   final String userId;
-     final String batch;
+  final String batch;
+  final String batchId;
 
-  const LeaveRequest({Key? key,required this.userId, required this.batch }):super(key: key);
+  const LeaveRequest(
+      {required this.userId,
+      required this.batch,
+      required this.batchId,
+      Key? key})
+      : super(key: key);
 
   @override
-
   _LeaveRequestState createState() => _LeaveRequestState();
 }
 
 class _LeaveRequestState extends State<LeaveRequest> {
-
 //String val = "";
-String? userId;
+  String? userId;
 
+  final TextEditingController _reasonController = TextEditingController();
+ 
   @override
-  void initState(){
+  void initState() {
     super.initState();
     _getUserIdFromPreferences();
     _initializeUserId();
-   //debugPrint('Received User ID in LeaveRequest: ${widget.userId}');
-   //if (widget.userId.isEmpty){
-   //_getuserId(); 
+    //debugPrint('Received User ID in LeaveRequest: ${widget.userId}');
+    //if (widget.userId.isEmpty){
+    //_getuserId();
   }
 
   Future<void> _initializeUserId() async {
@@ -54,21 +58,18 @@ String? userId;
     debugPrint('Initialized User ID: $userId');
   }
 
+  Future<void> _getUserIdFromPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userId = prefs.getString('userId') ?? '';
+    });
+    //debugPrint('Fetched User ID from SharedPreferences: $userId');
+  }
 
-
-Future<void> _getUserIdFromPreferences() async{
-  final prefs = await SharedPreferences.getInstance();
-  setState(() {
-    userId = prefs.getString('userId') ?? '';
-  });
-  //debugPrint('Fetched User ID from SharedPreferences: $userId');
-}
-
-Future<String?> getUserId() async {
-  final prefs = await SharedPreferences.getInstance();
-  return prefs.getString('userId');
-}
- 
+  Future<String?> getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('userId');
+  }
 
   String? _leaveType;
   String _reason = '';
@@ -86,15 +87,13 @@ Future<String?> getUserId() async {
     }
   }
 
-Future<void> saveUserId(String userId) async {
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.setString('userId', userId); // Use 'userId' as the key
- print('User ID saved: $userId');
-}
+  Future<void> saveUserId(String userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('userId', userId); // Use 'userId' as the key
+    print('User ID saved: $userId');
+  }
 
-Future<void> checkLogin(BuildContext ctx) async{
-
-}
+  Future<void> checkLogin(BuildContext ctx) async {}
 
   Future<void> _selectDate(BuildContext context, bool isFromDate) async {
     final DateTime? selectedDate = await showDatePicker(
@@ -122,80 +121,71 @@ Future<void> checkLogin(BuildContext ctx) async{
     }
   }
 
-Future<void> _submitLeaveRequest() async {
-  
+  Future<void> _submitLeaveRequest() async {
+  debugPrint('Submitting Leave Request...');
+  debugPrint('Leave Type: $_leaveType');
+  debugPrint('Reason: ${_reasonController.text}');
+  debugPrint('From Date: $_fromDate');
+  debugPrint('To Date: $_toDate');
+
   final userIdFinal = userId ?? widget.userId;
-  
-if (userId == null || userIdFinal.isEmpty){
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text('User Id is missing! please try again.')),
-  );
 
-return;
-
-}
-
-final userIdInt = int. tryParse(userIdFinal);
-
-if(userIdInt == null){
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text('user id is invalid')),
-  );
-  return;
-}
-
-  if (_leaveType == null || _fromDate == null || _toDate == null || _reason.isEmpty) {
+  if (userIdFinal.isEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('Please fill in all required fields')),
-
-
-);
-//debugPrint('Submitting leave request with userId: ${widget.userId}');
-
+      SnackBar(content: Text('User ID is missing! Please try again.')),
+    );
     return;
   }
 
-// int? userIdAsLong;
-// try{
-//   userIdAsLong = int.parse(userId);
-// }catch(e){
-//   ScaffoldMessenger.of(context).showSnackBar(
-//     SnackBar(content:Text('Invalid userId format!')),
-//     );
-//     return;
-//}
+  final userIdInt = int.tryParse(userIdFinal);
+  if (userIdInt == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('User ID is invalid')),
+    );
+    return;
+  }
 
- final url = Uri.parse("http://103.247.19.200:5050/UserReg/leave-request?userId=$userId&wfh=${widget.batch}");
+  if (_leaveType == null || _fromDate == null || _toDate == null || _reasonController.text.trim().isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Please fill in all required fields')),
+    );
+    return;
+  }
+
+  final wfhIdFinal = widget.batchId != "null" ? widget.batchId : "";
+
+  final url = Uri.parse(
+    "http://185.131.54.8:5050/UserReg/leave-request?userId=$userIdFinal&wfh=${widget.batchId}");
+
 
   final requestData = {
     'userId': userIdInt,
     'leaveType': _leaveType,
-    'reason': _reason,
+    'reason': _reasonController.text.trim(),
     'fromDate': _fromDate!.toIso8601String(),
     'toDate': _toDate!.toIso8601String(),
     'numberOfDays': _numberOfDays,
+    
   };
+  
+   debugPrint('Final Request URL: $url');
+  debugPrint('Final Request Data: ${jsonEncode(requestData)}');
 
-debugPrint('Request Data: ${jsonEncode(requestData)}');
   try {
-   final response = await http.post(
-  url, // ✅ No need to parse again
-  headers: {'Content-Type': 'application/json'},
-  body: jsonEncode(requestData),
-);
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(requestData),
+    );
 
-    if (response.statusCode == 200 || response.statusCode ==201) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: 
-        Text('Leave request submitted successfully')),
+        SnackBar(content: Text('Leave request submitted successfully')),
       );
       final responseData = jsonDecode(response.body);
       setState(() {
         _status = responseData['status'] ?? 'Pending';
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Leave request submitted successfully')),
-      );
     } else {
       throw Exception('Failed: ${response.reasonPhrase}');
     }
@@ -205,6 +195,7 @@ debugPrint('Request Data: ${jsonEncode(requestData)}');
     );
   }
 }
+
 
 
   @override
@@ -235,6 +226,7 @@ debugPrint('Request Data: ${jsonEncode(requestData)}');
               value: _leaveType,
             ),
             TextFormField(
+              controller: _reasonController,
               decoration: InputDecoration(labelText: 'Reason'),
               maxLines: 3,
               onChanged: (value) {
@@ -267,23 +259,23 @@ debugPrint('Request Data: ${jsonEncode(requestData)}');
               child: Text('Submit Leave Request'),
             ),
             if (_status != null) ...[
-  SizedBox(height: 16),
-  Text(
-    'Request Status: $_status',
-    style: TextStyle(
-      fontSize: 16,
-      fontWeight: FontWeight.bold,
-      color: _status == 'Approved'
-          ? Colors.green
-          : _status == 'Rejected'
-              ? Colors.red
-              : Colors.orange, // Pending
-    ),
-  ),
-],
+              SizedBox(height: 16),
+              Text(
+                'Request Status: $_status',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: _status == 'Approved'
+                      ? Colors.green
+                      : _status == 'Rejected'
+                          ? Colors.red
+                          : Colors.orange, // Pending
+                ),
+              ),
+            ],
           ],
         ),
       ),
     );
   }
-} 
+}

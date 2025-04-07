@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 
 
 Future<List<Attendance>> fetchAttendance() async {
-  final response = await http.get(Uri.parse('http://103.247.19.200:5050/UserReg/attendance/today'));
+  final response = await http.get(Uri.parse('http://185.131.54.8:5050/UserReg/attendance/today'));
 
   if (response.statusCode == 200) {
     List<dynamic> data = json.decode(response.body);

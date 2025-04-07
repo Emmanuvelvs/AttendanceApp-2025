@@ -84,12 +84,7 @@ void _navigateToBreakScanner(String type) {
                             borderRadius: BorderRadius.circular(25),
                           ),
                           child: Center(
-                            child: Icon(
-                              _isActive
-                                  ? Icons.arrow_forward // Right arrow when OUT
-                                  : Icons.arrow_back,   // Left arrow when IN
-                              color: Colors.white,
-                            ),
+                           
                           ),
                         ),
                       ),

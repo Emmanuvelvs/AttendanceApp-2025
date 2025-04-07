@@ -47,7 +47,8 @@ class LeaveRequest {
   }
 }
 class ApiService {
-  static const String baseUrl = 'http://103.247.19.200:5050/UserReg/leave-requests';
+   
+  static const String baseUrl = 'http://185.131.54.8:5050/UserReg/leave-requests';
 
   static Future<List<LeaveRequest>> fetchLeaveRequests(String userId) async {
     final response = await http.get(Uri.parse('$baseUrl?userId=$userId')); // Send as string

@@ -36,7 +36,7 @@ class LateRequest {
 class LateRequestService {
   static Future<List<LateRequest>> fetchLateRequests(int userId) async {
     final response = await http.get(
-      Uri.parse('http://103.247.19.200:5050/UserReg/late-requests?userId=$userId'), 
+      Uri.parse('http://185.131.54.8:5050/UserReg/late-requests?userId=$userId'), 
     );
 
     if (response.statusCode == 200) {

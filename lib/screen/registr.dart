@@ -33,8 +33,8 @@ List<Map<String, dynamic>> _batchList = []; // Store batch as dynamic list
   
   final RegExp _emailRegExp = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
   //final String apiUrl = 'http://192.168.1.42:8080/UserReg/reg'; 
- final String apiUrl = 'http://103.247.19.200:5050/UserReg/reg';
-final String batchApiUrl = 'http://103.247.19.200:5050/AdminReg/getAllBatches';
+ final String apiUrl = 'http://185.131.54.8:5050/UserReg/reg';
+final String batchApiUrl = 'http://185.131.54.8:5050/AdminReg/getAllBatches';
 //String _selectedBatch = 'Batch'; 
 
 @override

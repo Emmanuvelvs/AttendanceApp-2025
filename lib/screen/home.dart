@@ -183,15 +183,19 @@ Future<bool> isUserLoggedIn() async {
 
 
 Future<void> logoutUser(BuildContext context) async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  await prefs.remove("auth_token");
-  await prefs.setBool("isLoggedIn", false);
+  final prefs = await SharedPreferences.getInstance();
   
-  print("User logged out, token removed");
-  
-  Navigator.pushReplacement(
+  // Remove stored session ID
+  await prefs.remove('sessionId');  
+  await prefs.remove('auth_token'); // If needed
+
+  print("Session ID and Token Cleared"); // Debugging
+
+  // Navigate to login screen and prevent going back
+  Navigator.pushAndRemoveUntil(
     context,
-    MaterialPageRoute(builder: (context) => ScreenLogin()), // Redirect to login
+    MaterialPageRoute(builder: (context) => ScreenLogin()),
+    (route) => false, 
   );
 }
 
@@ -219,101 +223,126 @@ Future<void> logoutUser(BuildContext context) async {
         prefs.getString('userId') ?? prefs.getInt('userId')?.toString();
 
     if (userId != null && userId.isNotEmpty) {
-      List<String> batchOptions =
-          await _fetchBatches(); // Fetch dropdown options
 
-      if (batchOptions.isNotEmpty) {
-        _showBatchSelectionDialog(batchOptions, userId);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text("No batches available. Please try again later.")));
-      }
+  List<Map<String, String>> batchData = await _fetchBatches(); // Fetch batch data
+List<String> batchOptions = batchData.map((batch) => batch['name'] ?? '').toList(); // Extract only names
+
+if (batchOptions.isNotEmpty) {
+  _showBatchSelectionDialog(batchData, userId); // Pass batchData instead of batchOptions
+} else {
+  ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("No batches available. Please try again later.")));
+}
+
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("User ID not found. Please log in again.")));
     }
   }
 
-  Future<List<String>> _fetchBatches() async {
+  Future<List<Map<String, String>>> _fetchBatches() async {
     try {
       final response = await http
-          .get(Uri.parse("http://103.247.19.200:5050/AdminReg/LeaveWfh"));
+          .get(Uri.parse("http://185.131.54.8:5050/AdminReg/LeaveWfh"));
 
       if (response.statusCode == 200) {
         List<dynamic> data = json.decode(response.body);
-        return data.map<String>((batch) => batch['name'].toString()).toList();
+        debugPrint("API Response: $data");
+       
+       return data.map<Map<String, String>>((batch) => {
+        'name': batch['name'].toString(),
+        'id': batch['id'].toString(),  // Assuming the API returns 'wfhId'
+      }).toList();
+
       } else {
-        throw Exception("Failed to load batch options");
-      }
-    } catch (e) {
-      print("Error fetching batch options: $e");
+      print("Error: API returned status code ${response.statusCode}");
       return [];
     }
+  } catch (e) {
+     debugPrint("Network Error: $e");  // ✅ Print error message
+    return [];
   }
+}
 
-  void _showBatchSelectionDialog(List<String> batchOptions, String userId) {
-    String? selectedBatch;
+void _showBatchSelectionDialog(List<Map<String, String>> batchOptions, String userId) {
+  String? selectedBatch;
+  String? selectedWfhId;
 
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Select Batch"),
-          content: StatefulBuilder(
-            builder: (context, setState) {
-              return DropdownButton<String>(
-                value: selectedBatch,
-                hint: Text("Choose a batch"),
-                isExpanded: true,
-                onChanged: (newValue) {
-                  setState(() {
-                    selectedBatch = newValue!;
-                  });
-                },
-                items: batchOptions.map((batch) {
-                  return DropdownMenuItem<String>(
-                    value: batch,
-                    child: Text(batch),
-                  );
-                }).toList(),
-              );
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text("Cancel"),
-            ),
-            TextButton(
-              onPressed: () {
-                if (selectedBatch != null) {
-                  Navigator.pop(context);
-                  _navigateToLeaveRequestPage(selectedBatch!, userId);
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Please select a batch")));
-                }
-              },
-              child: Text("Proceed"),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text("Select Type "),
+       content: StatefulBuilder(
+  builder: (context, setState) {
+    return SizedBox(
+      width: double.maxFinite,  // Prevent unnecessary re-renders
+      child: DropdownButton<String>(
+        value: selectedBatch,
+        hint: Text("Choose Type"),
+        isExpanded: true,
+        onChanged: (newValue) {
+          setState(() {
+            selectedBatch = newValue;
+            selectedWfhId = batchOptions
+                .firstWhere((batch) => batch['name'] == newValue, orElse: () => {'id': ''})['id'];
 
-  void _navigateToLeaveRequestPage(String batch, String userId) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            leaveReq.LeaveRequest(userId: userId, batch: batch),
+            debugPrint("Selected Batch: $selectedBatch");
+    debugPrint("Selected Batch ID: $selectedWfhId");
+          });
+        },
+        items: batchOptions.map((batch) {
+          return DropdownMenuItem<String>(
+            value: batch['name'],
+            child: Text(batch['name']!),
+          );
+        }).toList(),
       ),
     );
-  }
+  },
+),
 
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text("Cancel"),
+          ),
+     TextButton(
+  onPressed: () {
+    if (selectedBatch != null && selectedWfhId != null && selectedWfhId!.isNotEmpty) {
+      Navigator.pop(context);
+      _navigateToLeaveRequestPage(selectedBatch!, selectedWfhId!, userId);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Please select a batch")),
+      );
+    }
+  },
+  child: Text("Proceed"),
+),
+
+        ],
+      );
+    },
+  );
+}
+
+
+  void _navigateToLeaveRequestPage(String batch, String batchId, String userId) {
+  debugPrint("Navigating to Leave Request with batchId: $batchId");
+  debugPrint("Batch: $batch");
+  debugPrint("Batch ID: $batchId");
+  debugPrint("User ID: $userId");
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) =>
+          leaveReq.LeaveRequest(userId: userId, batch: batch, batchId: batchId),  // Sending batchId
+    ),
+  );
+}
   void _handleViewLeaverequest() async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -341,6 +370,9 @@ Future<void> logoutUser(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isLoggedIn', false);
     await prefs.remove('userId');
+  await prefs.remove('sessionId'); // Remove the session ID
+
+  print('User logged out, sessionId cleared.');
 
     Navigator.of(ctx).pushAndRemoveUntil(
       MaterialPageRoute(builder: (ctx1) => ScreenLogin()),

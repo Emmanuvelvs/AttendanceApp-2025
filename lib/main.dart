@@ -9,37 +9,27 @@ import 'package:hive_flutter/adapters.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // Ensure Flutter is initialized
-
+  WidgetsFlutterBinding.ensureInitialized();
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  String? token = prefs.getString('auth_token'); // Retrieve token
+  String? sessionId = prefs.getString('sessionId');
 
-  // Decide the initial screen based on token presence
-  Widget initialScreen = (token != null && token.isNotEmpty)
-      ? ScreenHome() // Navigate to Home if token exists
-      : ScreenLogin(); // Otherwise, navigate to Login
-
-  runApp(MyApp(initialScreen: initialScreen));
+  runApp(MyApp(initialRoute: sessionId != null ? '/home' : '/login'));
 }
 
-    
-
 class MyApp extends StatelessWidget {
-final Widget initialScreen;
+  final String initialRoute;
 
-const MyApp({Key? key, required this.initialScreen}) : super(key: key);
-  
+  const MyApp({Key? key, required this.initialRoute}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: ThemeData(primaryColor: Colors.blueAccent),
       debugShowCheckedModeBanner: false,
-       
-        home: initialScreen,
-        routes: {
-          '/home':(context) => ScreenHome(),
-          '/login':(context) => ScreenLogin(),
-        },
+      initialRoute: initialRoute,
+      routes: {
+        '/home': (context) => ScreenHome(),
+        '/login': (context) => ScreenLogin(),
+      },
     );
   }
 }
@@ -77,9 +67,12 @@ class _SplashScreenState extends State<SplashScreen> {
     checkLoginStatus(); // Check login status on startup
   }
     // Start the timer to navigate to the Home screen
+ 
+ 
  Future<void> _checkLoginStatus() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+
 
     Future.delayed(Duration(seconds: 2), () { // Optional delay for a splash effect
       if (isLoggedIn) {

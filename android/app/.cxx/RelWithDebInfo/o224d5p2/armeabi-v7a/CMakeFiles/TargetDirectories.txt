@@ -1,0 +1,2 @@
+C:/emlflutter/attendance_project_1/android/app/.cxx/RelWithDebInfo/o224d5p2/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/emlflutter/attendance_project_1/android/app/.cxx/RelWithDebInfo/o224d5p2/armeabi-v7a/CMakeFiles/rebuild_cache.dir

@@ -46,7 +46,7 @@ class _UpdateUserState extends State<UpdateUser> {
 
   Future<void> _fetchUserDetails() async {
     print("Fetching details for userId: ${widget.userId}");
-    final String apiUrl = 'http://103.247.19.200:5050/user/${widget.userId}';
+    final String apiUrl = 'http://185.131.54.8:5050/user/${widget.userId}';
 
     try {
       final response = await http.get(Uri.parse(apiUrl));
